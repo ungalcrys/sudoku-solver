@@ -20,6 +20,7 @@ public class Main {
         Grid grid = new Grid(sudoku);
         grid.cleanHouses();
 
+        System.out.println("\n=================\n");
         for (int r = 0; r < 9; r += 1) {
             StringBuffer lineBuffer = new StringBuffer();
             for (int c = 0; c < 9; c += 1) {

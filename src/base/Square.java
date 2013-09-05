@@ -18,8 +18,7 @@ public class Square {
         if (value == 0) {
             computePreVariants(grid);
         } else {
-            this.value = value;
-            cleanAroundSquare(grid);
+            setValue(value, grid);
         }
     }
 
@@ -31,6 +30,7 @@ public class Square {
     }
 
     public void setValue(Integer value, Grid grid) {
+        System.out.println("==set value " + value);
         this.value = value;
         variants = null;
         cleanAroundSquare(grid);
@@ -61,16 +61,13 @@ public class Square {
     public void removeVariant(Grid grid, Integer value) {
         if (variants == null) {
             // no variants here
-            System.out.println("null variants");
+            // System.out.println("null variants");
             return;
         }
 
         System.out.println("row:" + row + " col:" + col + " variants remove " + value);
         variants.remove(value);
         if (variants.size() == 1) {
-            // this.value = variants.get(0);
-            // variants = null;
-            // cleanAroundSquare(grid);
             setValue(variants.get(0), grid);
         }
     }
