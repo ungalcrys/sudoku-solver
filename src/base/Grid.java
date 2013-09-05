@@ -33,7 +33,7 @@ public class Grid {
         System.out.println("==removePreRowVariants");
         for (int c = 0; c < 9; c += 1) {
             if (squares[row][c] != null)
-                squares[row][c].removeVariant(value);
+                squares[row][c].removeVariant(this, value);
         }
     }
 
@@ -51,7 +51,7 @@ public class Grid {
         System.out.println("==removePreColVariants");
         for (int r = 0; r < 9; r += 1) {
             if (squares[r][col] != null)
-                squares[r][col].removeVariant(value);
+                squares[r][col].removeVariant(this, value);
         }
     }
 
@@ -61,7 +61,7 @@ public class Grid {
             for (int c = col / 3 * 3; c < (col / 3 + 1) * 3; c += 1) {
                 System.out.println("row:" + r + " col:" + c);
                 if (squares[r][c] != null)
-                    squares[r][c].removeVariant(value);
+                    squares[r][c].removeVariant(this, value);
             }
         }
     }
@@ -103,47 +103,41 @@ public class Grid {
     }
 
     public void cleanHouses() {
-        for (int hr = 0; hr < 3; hr += 1) {
-            for (int hc = 0; hc < 3; hc += 1) {
-                cleanHouse(hr, hc);
+        boolean hasChanged = true;
+        while (hasChanged) {
+            hasChanged = false;
+            for (int hr = 0; hr < 3; hr += 1) {
+                for (int hc = 0; hc < 3; hc += 1) {
+                    hasChanged = hasChanged || cleanHouse(hr, hc);
+                }
             }
         }
     }
 
     // version 1: computing unique digits from existing variants
     // TODO version 2: computing unique digits from 1 to 9, checking in variants
-    private void cleanHouse(int hr, int hc) {
-        LinkedList<LinkedList<Integer>> vars = new LinkedList<LinkedList<Integer>>();
+    private boolean cleanHouse(int hr, int hc) {
+        boolean isHouseChanged = false;
+
+        LinkedList<Square> novalueSquares = new LinkedList<Square>();
         for (int row = hr * 3; row < (hr + 1) * 3; row += 1) {
             for (int col = hc * 3; col < (hc + 1) * 3; col += 1) {
-                Square square = getSquare(row, col);
-                LinkedList<Integer> variants = square.getVariants();
+                LinkedList<Integer> variants = getSquare(row, col).getVariants();
                 if (variants == null)
                     continue;
 
-                vars.add((LinkedList<Integer>) variants.clone());
-
-                // if (digits.size() == 0) {
-                // for (Integer variant : square.getVariants())
-                // digits.add(new SimpleSquare(variant, row, col));
-                // // digits.addAll(square.getVariants());
-                // continue;
-                // }
-                // square.getVariants().re
-                // for(Integer variant:square.getVariants())
-                // if ()
-
+                novalueSquares.add(new Square(row, col, variants));
             }
         }
 
-        for (int i = 0; i < vars.size(); i += 1) {
-            Iterator<Integer> iterator = vars.get(i).iterator();
+        for (int i = 0; i < novalueSquares.size(); i += 1) {
+            Iterator<Integer> iterator = novalueSquares.get(i).getVariants().iterator();
             while (iterator.hasNext()) {
                 boolean mustRemove = false;
                 Integer next = iterator.next();
-                for (int j = 0; j < vars.size(); j += 1)
+                for (int j = 0; j < novalueSquares.size(); j += 1)
                     if (i != j) {
-                        if (vars.get(j).remove(next))
+                        if (novalueSquares.get(j).getVariants().remove(next))
                             mustRemove = true;
                     }
                 if (mustRemove)
@@ -151,10 +145,17 @@ public class Grid {
             }
         }
 
-        for (LinkedList<Integer> var : vars) {
-            for (Integer digit : var)
-                System.out.println("=====digit " + digit);
+        for (Square square : novalueSquares) {
+            LinkedList<Integer> variants = square.getVariants();
+            if (variants.size() > 0) {
+                Integer integer = variants.get(0);
+                System.out.println("=====row:" + square.getRow() + " col:" + square.getCol()
+                        + " digit:" + integer);
+                getSquare(square.getRow(), square.getCol()).setValue(integer, this);
+                isHouseChanged = true;
+            }
         }
+        return isHouseChanged;
     }
 
 }

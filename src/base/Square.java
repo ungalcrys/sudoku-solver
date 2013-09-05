@@ -3,42 +3,62 @@ package base;
 import java.util.LinkedList;
 
 public class Square {
-    private LinkedList<Integer> variants;
     private Integer value;
+    private LinkedList<Integer> variants;
 
     private int row;
     private int col;
-    private Grid grid;
 
+    // used by grid constructor
     public Square(Grid grid, int row, int col, int value) {
         System.out.println("Square row:" + row + " col:" + col + " value:" + value);
-        this.grid = grid;
         this.row = row;
         this.col = col;
 
         if (value == 0) {
-            computePreVariants();
+            computePreVariants(grid);
         } else {
             this.value = value;
-            cleanAroundSquare();
+            cleanAroundSquare(grid);
         }
+    }
+
+    // used by clean house
+    public Square(int row, int col, LinkedList<Integer> variants) {
+        this.row = row;
+        this.col = col;
+        this.variants = (LinkedList<Integer>) variants.clone();
+    }
+
+    public void setValue(Integer value, Grid grid) {
+        this.value = value;
+        variants = null;
+        cleanAroundSquare(grid);
     }
 
     public Integer getValue() {
         return value;
     }
 
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
     public LinkedList<Integer> getVariants() {
         return variants;
     }
 
-    private void cleanAroundSquare() {
+    public void cleanAroundSquare(Grid grid) {
         grid.removeRowVariants(value, row, col);
         grid.removeColVariants(value, row, col);
         grid.removeHouseVariants(value, row, col);
     }
 
-    public void removeVariant(Integer value) {
+    public void removeVariant(Grid grid, Integer value) {
         if (variants == null) {
             // no variants here
             System.out.println("null variants");
@@ -48,13 +68,14 @@ public class Square {
         System.out.println("row:" + row + " col:" + col + " variants remove " + value);
         variants.remove(value);
         if (variants.size() == 1) {
-            this.value = variants.get(0);
-            variants = null;
-            cleanAroundSquare();
+            // this.value = variants.get(0);
+            // variants = null;
+            // cleanAroundSquare(grid);
+            setValue(variants.get(0), grid);
         }
     }
 
-    private void computePreVariants() {
+    private void computePreVariants(Grid grid) {
         System.out.println("computePreVariants");
         variants = Utils.createVariants();
         grid.getPreRowVariants(row, col, variants);

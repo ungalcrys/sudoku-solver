@@ -1,5 +1,6 @@
 package base;
 
+//TODO remove
 public class SimpleSquare {
     private final int value;
     private final int row;
