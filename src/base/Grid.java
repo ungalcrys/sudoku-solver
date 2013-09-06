@@ -1,5 +1,7 @@
 package base;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -162,6 +164,33 @@ public class Grid {
             }
         }
         return isHouseChanged;
+    }
+
+    private void clearLines() {
+        for (int hr = 0; hr < 3; hr += 1) {
+            for (int hc = 0; hc < 3; hc += 1) {
+                clearLine(hr, hc);
+            }
+        }
+    }
+
+    private void clearLine(int hr, int hc) {
+        HashMap<Integer, ArrayList<Point>> map = new HashMap<Integer, ArrayList<Point>>();
+
+        int startRow = hr * 3;
+        int endRow = (hr + 1) * 3;
+        int startCol = hc * 3;
+        int endCol = (hc + 1) * 3;
+        
+        for (int row = startRow; row < endRow; row += 1) {
+            for (int col = startCol; col < endCol; col += 1) {
+                LinkedList<Integer> variants = getSquare(row, col).getVariants();
+                if (variants == null)
+                    continue;
+                Point point = new Point(row,col);
+                map.get(key)
+            }
+        }
     }
 
 }
