@@ -1,6 +1,5 @@
 package base;
 
-
 public class Point {
 
     private int x;
@@ -17,5 +16,11 @@ public class Point {
 
     public int getY() {
         return y;
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer stringBuffer = new StringBuffer(x + ":" + y);
+        return stringBuffer.toString();
     }
 }

@@ -1,9 +1,12 @@
 package base;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
 
 public class Grid {
     private Square[][] squares = new Square[9][9];
@@ -166,12 +169,14 @@ public class Grid {
         return isHouseChanged;
     }
 
-    private void clearLines() {
+    public void cleanLockedCandidates1() {
         for (int hr = 0; hr < 3; hr += 1) {
             for (int hc = 0; hc < 3; hc += 1) {
+                System.out.println("==house " + hr + ":" + hc);
                 clearLine(hr, hc);
             }
         }
+
     }
 
     private void clearLine(int hr, int hc) {
@@ -181,16 +186,85 @@ public class Grid {
         int endRow = (hr + 1) * 3;
         int startCol = hc * 3;
         int endCol = (hc + 1) * 3;
-        
+
         for (int row = startRow; row < endRow; row += 1) {
             for (int col = startCol; col < endCol; col += 1) {
-                LinkedList<Integer> variants = getSquare(row, col).getVariants();
+                Square square = getSquare(row, col);
+                LinkedList<Integer> variants = square.getVariants();
                 if (variants == null)
                     continue;
-                Point point = new Point(row,col);
-                map.get(key)
+
+                for (Integer variant : variants) {
+                    ArrayList<Point> list = map.get(variant);
+                    // System.out.println("put value:" + variant + " " + point);
+                    if (list == null) {
+                        ArrayList<Point> arrayList = new ArrayList<Point>();
+                        arrayList.add(new Point(row, col));
+                        map.put(variant, arrayList);
+                        System.out.println("add1 " + variant + " now:" + arrayList);
+                    } else {
+                        list.add(new Point(row, col));
+                        // map.put(variant, list);
+                        System.out.println("add2 " + variant + " now:" + list);
+                    }
+                }
             }
         }
+
+        // System.out.println("map size " + map.size());
+        Iterator<Entry<Integer, ArrayList<Point>>> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<Integer, ArrayList<Point>> next = iterator.next();
+            List<Point> value = next.getValue();
+            if (value.size() == 2) {
+                System.out.println("iterator key:" + next.getKey() + " value  " + value);
+                int x = 0;
+                int y = 0;
+                for (Point point : value) {
+                    if (x == 0) {
+                        x = point.getX();
+                        y = point.getY();
+                    } else {
+                        if (x == point.getX()) {
+                            y = point.getY();
+                            for (int col = 0; col < 9; col++) {
+                                if (col / 3 != y / 3) {
+                                    Integer key = next.getKey();
+
+                                    LinkedList<Integer> variants = getSquare(x, col).getVariants();
+                                    if (variants != null && variants.remove(key))
+                                        System.out.println("H remove from variants " + x + ":"
+                                                + col + " value:" + key);
+                                }
+                            }
+                        } else if (y == point.getY()) {
+                            x = point.getX();
+                            for (int row = 0; row < 9; row++) {
+                                if (row / 3 != x / 3) {
+                                    Integer key = next.getKey();
+                                    Square square = getSquare(row, y);
+                                    LinkedList<Integer> variants = square.getVariants();
+                                    if (variants != null && variants.remove(key)) {
+                                        System.out.println("V remove from variants " + row + ":"
+                                                + y + " value:" + key);
+                                        if (variants.size() == 1)
+                                            square.setValue(variants.get(0), this);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //
+
     }
 
+    public void cleanNakedPairs() {
+        for (int x = 0; x < 9; x++)
+            for (int y = 0; y < 9; y++) {
+                
+            }
+    }
 }

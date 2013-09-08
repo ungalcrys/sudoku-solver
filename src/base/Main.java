@@ -4,23 +4,42 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        int[][] sudoku = new int[][] { 
-                { 0, 0, 0,  0, 0, 0,  6, 8, 0 },
-                { 0, 0, 0,  0, 7, 3,  0, 0, 9 },
-                { 3, 0, 9,  0, 0, 0,  0, 4, 5 },
+        // int[][] sudoku = new int[][] {
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        //
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        //
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        // { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, };
+        int[][] sudoku = new int[][] { { 0, 0, 0, 0, 2, 0, 0, 0, 0 },
+                { 0, 8, 0, 9, 7, 0, 0, 0, 2 }, { 0, 0, 0, 0, 0, 1, 0, 3, 8 },
 
-                { 4, 9, 0,  0, 0, 0,  0, 0, 0 },
-                { 8, 0, 3,  0, 5, 0,  9, 0, 2 },
-                { 0, 0, 0,  0, 0, 0,  0, 3, 6 },
+                { 0, 5, 0, 0, 0, 0, 8, 0, 4 }, { 0, 1, 0, 0, 4, 0, 0, 9, 0 },
+                { 6, 0, 3, 0, 0, 0, 0, 1, 0 },
 
-                { 9, 6, 0,  0, 0, 0,  3, 0, 8 },
-                { 7, 0, 0,  6, 8, 0,  0, 0, 0 },
-                { 0, 2, 8,  0, 0, 0,  0, 0, 0 },
-                };
+                { 2, 6, 0, 1, 0, 0, 0, 0, 0 }, { 4, 0, 0, 0, 3, 2, 0, 6, 0 },
+                { 0, 0, 0, 0, 8, 0, 0, 0, 0 }, };
         Grid grid = new Grid(sudoku);
+
+        System.out.println("\n=================================cleanHouses\n");
         grid.cleanHouses();
 
-        System.out.println("\n=================\n");
+        System.out.println("\n=================================LockedCandidates1\n");
+        grid.cleanLockedCandidates1();
+
+        // TODO do we really need that below?
+        System.out.println("\n=================================cleanHouses\n");
+        grid.cleanHouses();
+
+        System.out.println("\n=================================LockedNakedPairs\n");
+        grid.cleanNakedPairs();
+
+        System.out.println("\n=================================print\n");
         for (int r = 0; r < 9; r += 1) {
             StringBuffer lineBuffer = new StringBuffer();
             for (int c = 0; c < 9; c += 1) {
