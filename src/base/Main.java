@@ -30,14 +30,17 @@ public class Main {
         grid.cleanHouses();
 
         System.out.println("\n=================================LockedCandidates1\n");
-        grid.cleanLockedCandidates1();
+        grid.solveLockedCandidates1();
 
         // TODO do we really need that below?
         System.out.println("\n=================================cleanHouses\n");
         grid.cleanHouses();
 
-        System.out.println("\n=================================LockedNakedPairs\n");
-        grid.cleanNakedPairs();
+        System.out.println("\n=================================solveNakedPairs\n");
+        grid.solveNakedPairs();
+        
+        System.out.println("\n=================================solveHiddenPairs\n");
+        grid.solveHiddenPairs();
 
         System.out.println("\n=================================print\n");
         for (int r = 0; r < 9; r += 1) {

@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import command.HiddenPair;
+
 public class Grid {
     private Square[][] squares = new Square[9][9];
 
@@ -169,7 +171,7 @@ public class Grid {
         return isHouseChanged;
     }
 
-    public void cleanLockedCandidates1() {
+    public void solveLockedCandidates1() {
         for (int hr = 0; hr < 3; hr += 1) {
             for (int hc = 0; hc < 3; hc += 1) {
                 System.out.println("==house " + hr + ":" + hc);
@@ -222,11 +224,11 @@ public class Grid {
                 int y = 0;
                 for (Point point : value) {
                     if (x == 0) {
-                        x = point.getX();
-                        y = point.getY();
+                        x = point.getRow();
+                        y = point.getCol();
                     } else {
-                        if (x == point.getX()) {
-                            y = point.getY();
+                        if (x == point.getRow()) {
+                            y = point.getCol();
                             for (int col = 0; col < 9; col++) {
                                 if (col / 3 != y / 3) {
                                     Integer key = next.getKey();
@@ -237,8 +239,8 @@ public class Grid {
                                                 + col + " value:" + key);
                                 }
                             }
-                        } else if (y == point.getY()) {
-                            x = point.getX();
+                        } else if (y == point.getCol()) {
+                            x = point.getRow();
                             for (int row = 0; row < 9; row++) {
                                 if (row / 3 != x / 3) {
                                     Integer key = next.getKey();
@@ -261,10 +263,105 @@ public class Grid {
 
     }
 
-    public void cleanNakedPairs() {
-        for (int x = 0; x < 9; x++)
-            for (int y = 0; y < 9; y++) {
-                
+    public void solveNakedPairs() {
+        solveNakedPairs(true);
+        solveNakedPairs(false);
+    }
+
+    private void solveNakedPairs(boolean isHorizontal) {
+        for (int i = 0; i < 9; i += 1) {
+
+            // create a 2 variant squares list
+            LinkedList<Square> list = new LinkedList<Square>();
+            for (int j = 0; j < 9; j += 1) {
+                Square square = null;
+                if (isHorizontal)
+                    square = getSquare(i, j);
+                else
+                    square = getSquare(j, i);
+                LinkedList<Integer> variants = square.getVariants();
+                if (variants != null && variants.size() == 2) {
+                    list.add(square);
+                }
             }
+
+            // create naked pairs list
+            ArrayList<List<Square>> nakedPairs = getNakedPairs(list);
+
+            // clean around naked pairs
+            for (List<Square> pair : nakedPairs) {
+                int squareIndex = 0;
+                Square pairedSquare = pair.get(squareIndex);
+                int squareRow = pairedSquare.getRow();
+                int squareCol = pairedSquare.getCol();
+                int skipJ = -1;
+                if (isHorizontal)
+                    skipJ = squareCol;
+                else
+                    skipJ = squareRow;
+
+                for (int j = 0; j < 9; j += 1) {
+                    if (j == skipJ) {
+                        System.out.println("skip j:" + j);
+                        if (squareIndex + 1 < pair.size()) {
+                            pairedSquare = pair.get(1);
+                            if (isHorizontal)
+                                skipJ = pairedSquare.getCol();
+                            else
+                                skipJ = pairedSquare.getRow();
+                        }
+                    } else {
+                        Square square = null;
+                        if (isHorizontal) {
+                            square = getSquare(i, j);
+                            System.out.println("horizontal ");
+                        } else {
+                            square = getSquare(j, i);
+                            System.out.println("vertical ");
+                        }
+                        for (Integer variant : pairedSquare.getVariants()) {
+                            System.out.println("  remove variant:" + variant + " for i:" + i
+                                    + " - j:" + j);
+                            square.removeVariant(this, variant);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private ArrayList<List<Square>> getNakedPairs(LinkedList<Square> list) {
+        int size = 0;
+        ArrayList<List<Square>> nakedPairs = new ArrayList<List<Square>>();
+        while ((size = list.size()) > 1) {
+            // size = list.size();
+            Square firstSquare = list.get(0);
+            int i = 0;
+            for (i = 1; i < size; i += 1) {
+                Square square = list.get(i);
+                if (firstSquare.hasSameVariantsAs(square)) {
+                    System.out.println("got naked pair " + firstSquare.getLocationAsString() + "-"
+                            + square.getLocationAsString() + " " + firstSquare.getVariants());
+                    list.remove(firstSquare);
+                    list.remove(square);
+                    List<Square> pair = Arrays.asList(firstSquare, square);
+                    nakedPairs.add(pair);
+                    break;
+                }
+            }
+
+            // no naked pair not found
+            if (i == size)
+                list.remove(0);
+        }
+        return nakedPairs;
+    }
+
+    public void solveHiddenPairs() {
+        for (int hr = 0; hr < 3; hr += 1) {
+            for (int hc = 0; hc < 3; hc += 1) {
+                new HiddenPair(this, hr, hc).solve();;
+            }
+        }
     }
 }

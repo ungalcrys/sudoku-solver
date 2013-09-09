@@ -8,6 +8,7 @@ public class Square {
 
     private int row;
     private int col;
+    private Point point;
 
     // used by grid constructor
     public Square(Grid grid, int row, int col, int value) {
@@ -83,5 +84,26 @@ public class Square {
         for (int i = 0; i < variants.size(); i += 1)
             System.out.print(variants.get(i) + " ");
         System.out.println();
+    }
+
+    public boolean hasSameVariantsAs(Square square) {
+        LinkedList<Integer> variants2 = square.getVariants();
+        if (variants.size() != variants2.size())
+            return false;
+        for (Integer variant : variants) {
+            if (!variants2.contains(variant))
+                return false;
+        }
+        return true;
+    }
+
+    public String getLocationAsString() {
+        return new StringBuffer().append(row).append(':').append(col).toString();
+    }
+
+    public Point getPoint() {
+        if (point == null)
+            point = new Point(row, col);
+        return point;
     }
 }
