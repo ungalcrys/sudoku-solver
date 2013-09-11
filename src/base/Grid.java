@@ -376,7 +376,8 @@ public class Grid {
     }
 
     public void useXWing(int val) {
-        // TODO can use a arrayList with only n (number of found variants) as elements
+        // TODO can use a arrayList with only n (number of found variants) as
+        // elements
         int[] locationMap = new int[9];
         printDigit(val);
 
@@ -430,22 +431,42 @@ public class Grid {
         }
 
         for (Rect rect : rectsToBeRemoved) {
-            System.out.println("invalid " + rect);
+            System.out.println("-invalid " + rect);
             rectList.remove(rect);
+        }
+
+        Iterator<Rect> iterator = rectList.iterator();
+        while (iterator.hasNext()) {
+            Rect rect = iterator.next();
+            int y1 = rect.getY1();
+            int y2 = rect.getY2();
+            for (int y = 0; y < 9; y += 1) {
+                if (y == y1 || y == y2)
+                    continue;
+
+                LinkedList<Integer> variants1 = getSquare(y, rect.getX1()).getVariants();
+                LinkedList<Integer> variants2 = getSquare(y, rect.getX2()).getVariants();
+                if (variants1 != null && variants1.contains(val) && variants2 != null
+                        && variants2.contains(val)) {
+                    iterator.remove();
+                    System.out.println("=invalid " + rect);
+                    break;
+                }
+            }
         }
 
         for (Rect rect : rectList) {
             System.out.println("=clean around rect " + rect);
-//            for (int xy = 0; xy < 9; xy += 1) {
-//                if (xy != rect.getX1() && xy != rect.getX2()) {
-//                    getSquare(rect.getY1(), xy).removeVariant(this, val);
-//                    getSquare(rect.getY2(), xy).removeVariant(this, val);
-//                }
-//                if (xy != rect.getY1() && xy != rect.getY2()) {
-//                    getSquare(xy, rect.getX1()).removeVariant(this, val);
-//                    getSquare(xy, rect.getX2()).removeVariant(this, val);
-//                }
-//            }
+            for (int xy = 0; xy < 9; xy += 1) {
+                if (xy != rect.getX1() && xy != rect.getX2()) {
+                    getSquare(rect.getY1(), xy).removeVariant(this, val);
+                    getSquare(rect.getY2(), xy).removeVariant(this, val);
+                }
+                if (xy != rect.getY1() && xy != rect.getY2()) {
+                    getSquare(xy, rect.getX1()).removeVariant(this, val);
+                    getSquare(xy, rect.getX2()).removeVariant(this, val);
+                }
+            }
         }
         printDigit(val);
     }
