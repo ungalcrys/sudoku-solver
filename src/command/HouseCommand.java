@@ -1,13 +1,12 @@
 package command;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.ArrayList;
 
 import base.Grid;
 import base.Point;
 
 public abstract class HouseCommand {
-    protected HashMap<Integer, List<Point>> map;
+    protected ArrayList<Point>[] map;
     protected Grid grid;
 
     protected int startRow;
@@ -17,7 +16,8 @@ public abstract class HouseCommand {
 
     public HouseCommand(Grid grid, int hr, int hc) {
         this.grid = grid;
-        map = new HashMap<Integer, List<Point>>();
+        // from 1 to 9
+        map = new ArrayList[10];
 
         startRow = hr * 3;
         endRow = (hr + 1) * 3;
@@ -25,16 +25,19 @@ public abstract class HouseCommand {
         endCol = (hc + 1) * 3;
     }
 
-    public void solve() {
+    public void execute() {
         for (int row = startRow; row < endRow; row += 1) {
             for (int col = startCol; col < endCol; col += 1) {
-                createRawMap(row, col);
+                addToRawMap(row, col);
             }
         }
         clean();
+        // solve();
     }
 
-    public abstract void createRawMap(int row, int col);
+    public abstract void addToRawMap(int row, int col);
 
     public abstract void clean();
+
+    public abstract void solve();
 }

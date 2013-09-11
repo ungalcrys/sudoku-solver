@@ -360,8 +360,139 @@ public class Grid {
     public void solveHiddenPairs() {
         for (int hr = 0; hr < 3; hr += 1) {
             for (int hc = 0; hc < 3; hc += 1) {
-                new HiddenPair(this, hr, hc).solve();;
+                new HiddenPair(this, hr, hc).execute();
+                ;
             }
         }
+    }
+
+    private static final boolean DEBUG_XWING = false;
+
+    public void useXWing() {
+        System.out.println("=================================useXWing");
+        for (int i = 1; i < 10; i += 1) {
+            useXWing(i);
+        }
+    }
+
+    public void useXWing(int val) {
+        // TODO can use a arrayList with only n (number of found variants) as elements
+        int[] locationMap = new int[9];
+        printDigit(val);
+
+        LinkedList<Rect> rectList = new LinkedList<Rect>();
+        for (int y = 0; y < 8; y += 1) {
+
+            // initialize location map
+            for (int i = 0; i < 9; i += 1) {
+                locationMap[i] = 0;
+            }
+
+            for (int x = 0; x < 9; x += 1) {
+                LinkedList<Integer> variants = getSquare(y, x).getVariants();
+                if (variants != null && variants.contains(val)) {
+                    locationMap[x] = val;
+                }
+            }
+            ArrayList<Integer> list = new ArrayList<Integer>(9);
+            for (int y2 = y + 1; y2 < 9; y2 += 1) {
+                list.clear();
+                for (int x = 0; x < 9; x += 1) {
+                    LinkedList<Integer> variants = getSquare(y2, x).getVariants();
+                    if (locationMap[x] == val && variants != null && variants.contains(val)) {
+                        list.add(x);
+                        if (list.size() > 2)
+                            break;
+                    }
+                }
+                if (list.size() == 2) {
+                    Rect rect = new Rect(y, list.get(0), y2, list.get(1));
+                    System.out.println("found rectangle " + rect);
+                    rectList.add(rect);
+                }
+            }
+        }
+
+        ArrayList<Rect> rectsToBeRemoved = new ArrayList<Rect>(9);
+        int maxI = rectList.size() - 1;
+        int maxI2 = rectList.size();
+        for (int i = 0; i < maxI; i += 1) {
+            for (int i2 = i + 1; i2 < maxI2; i2 += 1) {
+                Rect rect1 = rectList.get(i);
+                Rect rect2 = rectList.get(i2);
+                if (rect1.getX1() == rect2.getX1()) {
+                    if (!rectsToBeRemoved.contains(rect1))
+                        rectsToBeRemoved.add(rect1);
+                    rectsToBeRemoved.add(rect2);
+                    break;
+                }
+            }
+        }
+
+        for (Rect rect : rectsToBeRemoved) {
+            System.out.println("invalid " + rect);
+            rectList.remove(rect);
+        }
+
+        for (Rect rect : rectList) {
+            System.out.println("=clean around rect " + rect);
+//            for (int xy = 0; xy < 9; xy += 1) {
+//                if (xy != rect.getX1() && xy != rect.getX2()) {
+//                    getSquare(rect.getY1(), xy).removeVariant(this, val);
+//                    getSquare(rect.getY2(), xy).removeVariant(this, val);
+//                }
+//                if (xy != rect.getY1() && xy != rect.getY2()) {
+//                    getSquare(xy, rect.getX1()).removeVariant(this, val);
+//                    getSquare(xy, rect.getX2()).removeVariant(this, val);
+//                }
+//            }
+        }
+        printDigit(val);
+    }
+
+    private static final boolean DEBUG_DIGIT = true;
+
+    public void printDigit(int digit) {
+        for (int y = 0; y < 9; y += 1) {
+            if (DEBUG_DIGIT && y % 3 == 0)
+                System.out.println();
+            for (int x = 0; x < 9; x += 1) {
+                if (DEBUG_DIGIT && x % 3 == 0)
+                    System.out.print(" ");
+                LinkedList<Integer> variants = getSquare(y, x).getVariants();
+                if (variants != null && variants.contains(digit)) {
+                    if (DEBUG_DIGIT)
+                        System.out.print(digit + " ");
+                } else {
+                    if (DEBUG_DIGIT)
+                        System.out.print(". ");
+                }
+            }
+            if (DEBUG_DIGIT)
+                System.out.println();
+        }
+        if (DEBUG_DIGIT)
+            System.out.println("\n");
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer lineBuffer = new StringBuffer();
+        for (int r = 0; r < 9; r += 1) {
+            for (int c = 0; c < 9; c += 1) {
+                Square square = getSquare(r, c);
+                Integer value = square.getValue();
+                if (value != null)
+                    lineBuffer.append(value);
+                else {
+                    LinkedList<Integer> variants = square.getVariants();
+                    for (int i = 0; i < variants.size(); i += 1)
+                        lineBuffer.append(variants.get(i));
+                }
+                lineBuffer.append(' ');
+            }
+            lineBuffer.append("\n");
+        }
+        return lineBuffer.toString();
     }
 }

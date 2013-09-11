@@ -12,4 +12,8 @@ public class Utils {
         list.addAll(ALL_DIGITS);
         return list;
     }
+
+    public static char getChar(int y) {
+        return (char) (65 + y);
+    }
 }

@@ -26,7 +26,7 @@ public class Point {
 
     @Override
     public String toString() {
-        StringBuffer stringBuffer = new StringBuffer(row + ":" + col);
+        StringBuffer stringBuffer = new StringBuffer().append(Utils.getChar(row)).append(col + 1);
         return stringBuffer.toString();
     }
 }

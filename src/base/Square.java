@@ -1,6 +1,8 @@
 package base;
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Square {
     private Integer value;
@@ -59,6 +61,18 @@ public class Square {
         grid.removeHouseVariants(value, row, col);
     }
 
+    public void removeVariantsBut(List<Integer> variants) {
+        Iterator<Integer> iterator = this.variants.iterator();
+        while (iterator.hasNext()) {
+            Integer nextVariant = iterator.next();
+            if (!variants.contains(nextVariant)) {
+                iterator.remove();
+                System.out
+                        .println("row:" + row + " col:" + col + " variants remove " + nextVariant);
+            }
+        }
+    }
+
     public void removeVariant(Grid grid, Integer value) {
         if (variants == null) {
             // no variants here
@@ -66,10 +80,11 @@ public class Square {
             return;
         }
 
-        System.out.println("row:" + row + " col:" + col + " variants remove " + value);
-        variants.remove(value);
-        if (variants.size() == 1) {
-            setValue(variants.get(0), grid);
+        if (variants.remove(value)) {
+            System.out.println(new Point(row, col) + " remove variant " + value);
+            if (variants.size() == 1) {
+                setValue(variants.get(0), grid);
+            }
         }
     }
 
