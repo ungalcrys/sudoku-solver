@@ -2,26 +2,18 @@ package base;
 
 public class Point {
 
-    private int row;
-    private int col;
+    public final int row;
+    public final int col;
 
     public Point(int row, int col) {
         this.row = row;
         this.col = col;
     }
 
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
-    }
-
     @Override
     public boolean equals(Object obj) {
         Point point = (Point) obj;
-        return row == point.getRow() && col == point.getCol();
+        return row == point.row && col == point.col;
     }
 
     @Override

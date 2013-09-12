@@ -2,10 +2,7 @@ package command;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map.Entry;
 
 import base.Grid;
 import base.Point;
@@ -23,15 +20,15 @@ public class HiddenPair extends HouseCommand {
         Square square = grid.getSquare(row, col);
         LinkedList<Integer> variants = square.getVariants();
         if (variants != null) {
-            Point point = square.getPoint();
+            // Point point = square.getPoint();
             for (Integer variant : variants) {
                 ArrayList<Point> list = map[variant];
                 if (list == null) {
                     list = new ArrayList<Point>();
-                    list.add(point);
+                    list.add(square.point);
                     map[variant] = list;
                 } else
-                    list.add(point);
+                    list.add(square.point);
             }
         }
     }
@@ -48,7 +45,7 @@ public class HiddenPair extends HouseCommand {
                         System.out.println("> " + i + " and " + j + " at " + points);
                         map[j] = null;
                         for (Point point : points) {
-                            grid.getSquare(point.getRow(), point.getCol()).removeVariantsBut(
+                            grid.getSquare(point.row, point.col).removeVariantsBut(
                                     Arrays.asList(i, j));
                         }
                         break;

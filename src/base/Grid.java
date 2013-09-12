@@ -11,101 +11,105 @@ import java.util.Map.Entry;
 import command.HiddenPair;
 
 public class Grid {
-    private Square[][] squares = new Square[9][9];
+    private static final int SQUARE_SIDE = 9;
+    private static final int HOUSE_SIDE = 3;
 
+    private static final Square[][] squares = new Square[9][9];
+
+    public static Grid instance;
+
+    /**
+     * Constructor for the grid that fills the squares with given values and will also solve the
+     * single position and single candidates squares.
+     * 
+     * @param initial
+     *            matrix to be solved
+     */
     public Grid(int[][] initial) {
-        for (int row = 0; row < 9; row++) {
-            for (int col = 0; col < 9; col++) {
-                squares[row][col] = new Square(this, row, col, initial[row][col]);
-                System.out.println();
+        instance = this;
+        for (int row = 0; row < SQUARE_SIDE; row += 1) {
+            for (int col = 0; col < SQUARE_SIDE; col += 1) {
+                squares[row][col] = new Square(row, col, initial[row][col]);
             }
         }
+    }
+
+    public static Grid getInstance() {
+        return instance;
     }
 
     public Square getSquare(int row, int col) {
         return squares[row][col];
     }
 
-    /**
-     * Removes all value occurrences from variants on specified row.
-     * 
-     * @param value
-     *            to be removed from variants arrays
-     * @param row
-     *            where squares must be iterated
-     * @param col
-     *            limit of the iteration
-     */
-    public void removeRowVariants(Integer value, int row, int col) {
-        System.out.println("removePreRowVariants");
-        for (int c = 0; c < 9; c += 1) {
-            if (squares[row][c] != null)
-                squares[row][c].removeVariant(this, value);
-        }
+    private int getHouseStart(int index) {
+        return index / HOUSE_SIDE * HOUSE_SIDE;
     }
 
-    /**
-     * Removes all value occurrences from variants on specified column.
-     * 
-     * @param value
-     *            to be removed from variants arrays
-     * @param row
-     *            limit of the iteration
-     * @param col
-     *            where squares must be iterated
-     */
-    public void removeColVariants(Integer value, int row, int col) {
-        System.out.println("removePreColVariants");
-        for (int r = 0; r < 9; r += 1) {
-            if (squares[r][col] != null)
-                squares[r][col].removeVariant(this, value);
-        }
-    }
+    // TODO use command at cleanVariantsAround(Square) and filterByPrevalues(Square)
+    public void cleanVariantsAround(Square square) {
+        Integer value = square.getValue();
 
-    public void removeHouseVariants(Integer value, int row, int col) {
-        System.out.println("removePreHouseVariants");
-        for (int r = row / 3 * 3; r < ((row / 3 + 1) * 3); r += 1) {
-            for (int c = col / 3 * 3; c < (col / 3 + 1) * 3; c += 1) {
-                System.out.println("row:" + r + " col:" + c);
-                if (squares[r][c] != null)
-                    squares[r][c].removeVariant(this, value);
+        // System.out.println("clean row variants");
+        for (int c = 0; c < SQUARE_SIDE; c += 1) {
+            if (squares[square.point.row][c] == null)
+                break;
+            squares[square.point.row][c].removeVariant(value);
+        }
+
+        // System.out.println("clean col variants");
+        for (int r = 0; r < SQUARE_SIDE; r += 1) {
+            if (squares[r][square.point.col] == null)
+                break;
+            squares[r][square.point.col].removeVariant(value);
+        }
+
+        // System.out.println("clean house variants");
+        int startRow = getHouseStart(square.point.row);
+        int endRow = startRow + HOUSE_SIDE;
+        int startCol = getHouseStart(square.point.col);
+        int endCol = startCol + HOUSE_SIDE;
+        outerloop: for (int r = startRow; r < endRow; r += 1) {
+            for (int c = startCol; c < endCol; c += 1) {
+                if (squares[r][c] == null)
+                    break outerloop;
+                squares[r][c].removeVariant(value);
             }
         }
     }
 
-    // on row
-    public void getPreRowVariants(int row, int col, LinkedList<Integer> initialList) {
-        for (int c = 0; c < col; c += 1) {
-            Integer value = squares[row][c].getValue();
-            if (value != null) {
-                System.out.println("row remove " + value);
-                initialList.remove(value);
-            }
-        }
+    private void removeValueFromVariants(int y, int x, LinkedList<Integer> variants) {
+        Integer value = squares[y][x].getValue();
+        if ((value != null) && variants.remove(value) && Square.DEBUG_SINGLE_CANDIDATE)
+            System.out.println("remove from variants " + value);
+
     }
 
-    // on column
-    public void getPreColumnVariants(int row, int col, LinkedList<Integer> initialList) {
-        for (int r = 0; r < row; r += 1) {
-            Integer value = squares[r][col].getValue();
-            System.out.println("col remove " + value);
-            initialList.remove(value);
-        }
-    }
+    public void filterVariantsByPrevalues(Square square) {
+        LinkedList<Integer> variants = square.getVariants();
 
-    // on house
-    public void getPreHouseVariants(int row, int col, LinkedList<Integer> initialList) {
-        for (int r = row / 3 * 3; r < row; r += 1) {
-            for (int c = col / 3 * 3; c < (col / 3 + 1) * 3; c += 1) {
-                Integer value = squares[r][c].getValue();
-                System.out.println("home remove1 " + value);
-                initialList.remove(value);
+        for (int x = 0; x < square.point.col; x += 1) {
+            removeValueFromVariants(square.point.row, x, variants);
+        }
+
+        for (int r = 0; r < square.point.row; r += 1) {
+            removeValueFromVariants(r, square.point.col, variants);
+        }
+
+        int startRow = getHouseStart(square.point.row);
+        int startCol = getHouseStart(square.point.col);
+        int endCol = startCol + HOUSE_SIDE;
+
+        // check the rows before the current row
+        for (int y = startRow; y < square.point.row; y += 1) {
+            for (int x = startCol; x < endCol; x += 1) {
+                removeValueFromVariants(y, x, variants);
             }
         }
-        for (int c = col / 3 * 3; c < col; c += 1) {
-            Integer value = squares[row][c].getValue();
-            System.out.println("home remove2 " + value);
-            initialList.remove(value);
+
+        // check the current row
+        for (int c = startCol; c < square.point.col; c += 1) {
+            removeValueFromVariants(square.point.row, c, variants);
         }
     }
 
@@ -113,8 +117,8 @@ public class Grid {
         boolean hasChanged = true;
         while (hasChanged) {
             hasChanged = false;
-            for (int hr = 0; hr < 3; hr += 1) {
-                for (int hc = 0; hc < 3; hc += 1) {
+            for (int hr = 0; hr < HOUSE_SIDE; hr += 1) {
+                for (int hc = 0; hc < HOUSE_SIDE; hc += 1) {
                     hasChanged = hasChanged || cleanHouse(hr, hc);
                 }
             }
@@ -127,10 +131,10 @@ public class Grid {
         boolean isHouseChanged = false;
         LinkedList<Square> novalSquares = new LinkedList<Square>();
 
-        int startRow = hr * 3;
-        int endRow = (hr + 1) * 3;
-        int startCol = hc * 3;
-        int endCol = (hc + 1) * 3;
+        int startRow = hr * HOUSE_SIDE;
+        int endRow = (hr + 1) * HOUSE_SIDE;
+        int startCol = hc * HOUSE_SIDE;
+        int endCol = (hc + 1) * HOUSE_SIDE;
         for (int row = startRow; row < endRow; row += 1) {
             for (int col = startCol; col < endCol; col += 1) {
                 LinkedList<Integer> variants = getSquare(row, col).getVariants();
@@ -164,7 +168,7 @@ public class Grid {
             if (variants.size() > 0) {
                 Integer integer = variants.get(0);
                 System.out.println();
-                getSquare(square.getRow(), square.getCol()).setValue(integer, this);
+                getSquare(square.point.row, square.point.col).setValue(integer);
                 isHouseChanged = true;
             }
         }
@@ -172,8 +176,8 @@ public class Grid {
     }
 
     public void solveLockedCandidates1() {
-        for (int hr = 0; hr < 3; hr += 1) {
-            for (int hc = 0; hc < 3; hc += 1) {
+        for (int hr = 0; hr < HOUSE_SIDE; hr += 1) {
+            for (int hc = 0; hc < HOUSE_SIDE; hc += 1) {
                 System.out.println("==house " + hr + ":" + hc);
                 clearLine(hr, hc);
             }
@@ -184,10 +188,10 @@ public class Grid {
     private void clearLine(int hr, int hc) {
         HashMap<Integer, ArrayList<Point>> map = new HashMap<Integer, ArrayList<Point>>();
 
-        int startRow = hr * 3;
-        int endRow = (hr + 1) * 3;
-        int startCol = hc * 3;
-        int endCol = (hc + 1) * 3;
+        int startRow = hr * HOUSE_SIDE;
+        int endRow = (hr + 1) * HOUSE_SIDE;
+        int startCol = hc * HOUSE_SIDE;
+        int endCol = (hc + 1) * HOUSE_SIDE;
 
         for (int row = startRow; row < endRow; row += 1) {
             for (int col = startCol; col < endCol; col += 1) {
@@ -224,13 +228,13 @@ public class Grid {
                 int y = 0;
                 for (Point point : value) {
                     if (x == 0) {
-                        x = point.getRow();
-                        y = point.getCol();
+                        x = point.row;
+                        y = point.col;
                     } else {
-                        if (x == point.getRow()) {
-                            y = point.getCol();
-                            for (int col = 0; col < 9; col++) {
-                                if (col / 3 != y / 3) {
+                        if (x == point.row) {
+                            y = point.col;
+                            for (int col = 0; col < SQUARE_SIDE; col++) {
+                                if (col / HOUSE_SIDE != y / HOUSE_SIDE) {
                                     Integer key = next.getKey();
 
                                     LinkedList<Integer> variants = getSquare(x, col).getVariants();
@@ -239,10 +243,10 @@ public class Grid {
                                                 + col + " value:" + key);
                                 }
                             }
-                        } else if (y == point.getCol()) {
-                            x = point.getRow();
-                            for (int row = 0; row < 9; row++) {
-                                if (row / 3 != x / 3) {
+                        } else if (y == point.col) {
+                            x = point.row;
+                            for (int row = 0; row < SQUARE_SIDE; row++) {
+                                if (row / HOUSE_SIDE != x / HOUSE_SIDE) {
                                     Integer key = next.getKey();
                                     Square square = getSquare(row, y);
                                     LinkedList<Integer> variants = square.getVariants();
@@ -250,7 +254,7 @@ public class Grid {
                                         System.out.println("V remove from variants " + row + ":"
                                                 + y + " value:" + key);
                                         if (variants.size() == 1)
-                                            square.setValue(variants.get(0), this);
+                                            square.setValue(variants.get(0));
                                     }
                                 }
                             }
@@ -269,11 +273,11 @@ public class Grid {
     }
 
     private void solveNakedPairs(boolean isHorizontal) {
-        for (int i = 0; i < 9; i += 1) {
+        for (int i = 0; i < SQUARE_SIDE; i += 1) {
 
             // create a 2 variant squares list
             LinkedList<Square> list = new LinkedList<Square>();
-            for (int j = 0; j < 9; j += 1) {
+            for (int j = 0; j < SQUARE_SIDE; j += 1) {
                 Square square = null;
                 if (isHorizontal)
                     square = getSquare(i, j);
@@ -292,23 +296,23 @@ public class Grid {
             for (List<Square> pair : nakedPairs) {
                 int squareIndex = 0;
                 Square pairedSquare = pair.get(squareIndex);
-                int squareRow = pairedSquare.getRow();
-                int squareCol = pairedSquare.getCol();
+                int squareRow = pairedSquare.point.row;
+                int squareCol = pairedSquare.point.col;
                 int skipJ = -1;
                 if (isHorizontal)
                     skipJ = squareCol;
                 else
                     skipJ = squareRow;
 
-                for (int j = 0; j < 9; j += 1) {
+                for (int j = 0; j < SQUARE_SIDE; j += 1) {
                     if (j == skipJ) {
                         System.out.println("skip j:" + j);
                         if (squareIndex + 1 < pair.size()) {
                             pairedSquare = pair.get(1);
                             if (isHorizontal)
-                                skipJ = pairedSquare.getCol();
+                                skipJ = pairedSquare.point.col;
                             else
-                                skipJ = pairedSquare.getRow();
+                                skipJ = pairedSquare.point.row;
                         }
                     } else {
                         Square square = null;
@@ -322,7 +326,7 @@ public class Grid {
                         for (Integer variant : pairedSquare.getVariants()) {
                             System.out.println("  remove variant:" + variant + " for i:" + i
                                     + " - j:" + j);
-                            square.removeVariant(this, variant);
+                            square.removeVariant(variant);
                         }
                     }
                 }
@@ -340,8 +344,8 @@ public class Grid {
             for (i = 1; i < size; i += 1) {
                 Square square = list.get(i);
                 if (firstSquare.hasSameVariantsAs(square)) {
-                    System.out.println("got naked pair " + firstSquare.getLocationAsString() + "-"
-                            + square.getLocationAsString() + " " + firstSquare.getVariants());
+                    System.out.println("got naked pair " + firstSquare.point + "-" + square.point
+                            + " " + firstSquare.getVariants());
                     list.remove(firstSquare);
                     list.remove(square);
                     List<Square> pair = Arrays.asList(firstSquare, square);
@@ -358,8 +362,8 @@ public class Grid {
     }
 
     public void solveHiddenPairs() {
-        for (int hr = 0; hr < 3; hr += 1) {
-            for (int hc = 0; hc < 3; hc += 1) {
+        for (int hr = 0; hr < HOUSE_SIDE; hr += 1) {
+            for (int hc = 0; hc < HOUSE_SIDE; hc += 1) {
                 new HiddenPair(this, hr, hc).execute();
                 ;
             }
@@ -378,27 +382,27 @@ public class Grid {
     public void useXWing(int val) {
         // TODO can use a arrayList with only n (number of found variants) as
         // elements
-        int[] locationMap = new int[9];
+        int[] locationMap = new int[SQUARE_SIDE];
         printDigit(val);
 
         LinkedList<Rect> rectList = new LinkedList<Rect>();
         for (int y = 0; y < 8; y += 1) {
 
             // initialize location map
-            for (int i = 0; i < 9; i += 1) {
+            for (int i = 0; i < SQUARE_SIDE; i += 1) {
                 locationMap[i] = 0;
             }
 
-            for (int x = 0; x < 9; x += 1) {
+            for (int x = 0; x < SQUARE_SIDE; x += 1) {
                 LinkedList<Integer> variants = getSquare(y, x).getVariants();
                 if (variants != null && variants.contains(val)) {
                     locationMap[x] = val;
                 }
             }
-            ArrayList<Integer> list = new ArrayList<Integer>(9);
-            for (int y2 = y + 1; y2 < 9; y2 += 1) {
+            ArrayList<Integer> list = new ArrayList<Integer>(SQUARE_SIDE);
+            for (int y2 = y + 1; y2 < SQUARE_SIDE; y2 += 1) {
                 list.clear();
-                for (int x = 0; x < 9; x += 1) {
+                for (int x = 0; x < SQUARE_SIDE; x += 1) {
                     LinkedList<Integer> variants = getSquare(y2, x).getVariants();
                     if (locationMap[x] == val && variants != null && variants.contains(val)) {
                         list.add(x);
@@ -414,7 +418,7 @@ public class Grid {
             }
         }
 
-        ArrayList<Rect> rectsToBeRemoved = new ArrayList<Rect>(9);
+        ArrayList<Rect> rectsToBeRemoved = new ArrayList<Rect>(SQUARE_SIDE);
         int maxI = rectList.size() - 1;
         int maxI2 = rectList.size();
         for (int i = 0; i < maxI; i += 1) {
@@ -440,7 +444,7 @@ public class Grid {
             Rect rect = iterator.next();
             int y1 = rect.getY1();
             int y2 = rect.getY2();
-            for (int y = 0; y < 9; y += 1) {
+            for (int y = 0; y < SQUARE_SIDE; y += 1) {
                 if (y == y1 || y == y2)
                     continue;
 
@@ -457,14 +461,14 @@ public class Grid {
 
         for (Rect rect : rectList) {
             System.out.println("=clean around rect " + rect);
-            for (int xy = 0; xy < 9; xy += 1) {
+            for (int xy = 0; xy < SQUARE_SIDE; xy += 1) {
                 if (xy != rect.getX1() && xy != rect.getX2()) {
-                    getSquare(rect.getY1(), xy).removeVariant(this, val);
-                    getSquare(rect.getY2(), xy).removeVariant(this, val);
+                    getSquare(rect.getY1(), xy).removeVariant(val);
+                    getSquare(rect.getY2(), xy).removeVariant(val);
                 }
                 if (xy != rect.getY1() && xy != rect.getY2()) {
-                    getSquare(xy, rect.getX1()).removeVariant(this, val);
-                    getSquare(xy, rect.getX2()).removeVariant(this, val);
+                    getSquare(xy, rect.getX1()).removeVariant(val);
+                    getSquare(xy, rect.getX2()).removeVariant(val);
                 }
             }
         }
@@ -474,11 +478,11 @@ public class Grid {
     private static final boolean DEBUG_DIGIT = true;
 
     public void printDigit(int digit) {
-        for (int y = 0; y < 9; y += 1) {
-            if (DEBUG_DIGIT && y % 3 == 0)
+        for (int y = 0; y < SQUARE_SIDE; y += 1) {
+            if (DEBUG_DIGIT && y % HOUSE_SIDE == 0)
                 System.out.println();
-            for (int x = 0; x < 9; x += 1) {
-                if (DEBUG_DIGIT && x % 3 == 0)
+            for (int x = 0; x < SQUARE_SIDE; x += 1) {
+                if (DEBUG_DIGIT && x % HOUSE_SIDE == 0)
                     System.out.print(" ");
                 LinkedList<Integer> variants = getSquare(y, x).getVariants();
                 if (variants != null && variants.contains(digit)) {
@@ -496,11 +500,34 @@ public class Grid {
             System.out.println("\n");
     }
 
+    public void print() {
+        for (int y = 0; y < SQUARE_SIDE; y += 1) {
+            if (DEBUG_DIGIT && y % HOUSE_SIDE == 0)
+                System.out.println();
+            for (int x = 0; x < SQUARE_SIDE; x += 1) {
+                if (DEBUG_DIGIT && x % HOUSE_SIDE == 0)
+                    System.out.print(" ");
+                Integer value = getSquare(y, x).getValue();
+                if (value != null) {
+                    if (DEBUG_DIGIT)
+                        System.out.print(value + " ");
+                } else {
+                    if (DEBUG_DIGIT)
+                        System.out.print(". ");
+                }
+            }
+            if (DEBUG_DIGIT)
+                System.out.println();
+        }
+        if (DEBUG_DIGIT)
+            System.out.println("\n");
+    }
+
     @Override
     public String toString() {
         StringBuffer lineBuffer = new StringBuffer();
-        for (int r = 0; r < 9; r += 1) {
-            for (int c = 0; c < 9; c += 1) {
+        for (int r = 0; r < SQUARE_SIDE; r += 1) {
+            for (int c = 0; c < SQUARE_SIDE; c += 1) {
                 Square square = getSquare(r, c);
                 Integer value = square.getValue();
                 if (value != null)

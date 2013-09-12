@@ -1,64 +1,61 @@
 package base;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Square {
+    private static final List<Integer> ALL_DIGITS = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+    // flag used to debug constructor and single candidate detection
+    public static final boolean DEBUG_SINGLE_CANDIDATE = false;
+
     private Integer value;
     private LinkedList<Integer> variants;
 
-    private int row;
-    private int col;
-    private Point point;
+    public final Point point;
 
     // used by grid constructor
-    public Square(Grid grid, int row, int col, int value) {
-        System.out.println("Square row:" + row + " col:" + col + " value:" + value);
-        this.row = row;
-        this.col = col;
+    public Square(int row, int col, int value) {
+        point = new Point(row, col);
+        if (DEBUG_SINGLE_CANDIDATE)
+            System.out.println("\n=== new square " + point);
 
-        if (value == 0) {
-            computePreVariants(grid);
-        } else {
-            setValue(value, grid);
+        if (value == 0)
+            computeVariants();
+        else {
+            if (DEBUG_SINGLE_CANDIDATE)
+                System.out.println(point + " set value " + value);
+            setValue(value, true);
         }
+
     }
 
     // used by clean house
     public Square(int row, int col, LinkedList<Integer> variants) {
-        this.row = row;
-        this.col = col;
+        point = new Point(row, col);
         this.variants = (LinkedList<Integer>) variants.clone();
     }
 
-    public void setValue(Integer value, Grid grid) {
-        System.out.println("==set value " + value);
+    private void setValue(Integer value, boolean isCallFromInit) {
+        if (!isCallFromInit)
+            System.out.println(point + " set value " + value);
         this.value = value;
         variants = null;
-        cleanAroundSquare(grid);
+        Grid.getInstance().cleanVariantsAround(this);
+    }
+
+    public void setValue(Integer value) {
+        setValue(value, false);
     }
 
     public Integer getValue() {
         return value;
     }
 
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
-    }
-
     public LinkedList<Integer> getVariants() {
         return variants;
-    }
-
-    public void cleanAroundSquare(Grid grid) {
-        grid.removeRowVariants(value, row, col);
-        grid.removeColVariants(value, row, col);
-        grid.removeHouseVariants(value, row, col);
     }
 
     public void removeVariantsBut(List<Integer> variants) {
@@ -67,38 +64,35 @@ public class Square {
             Integer nextVariant = iterator.next();
             if (!variants.contains(nextVariant)) {
                 iterator.remove();
-                System.out
-                        .println("row:" + row + " col:" + col + " variants remove " + nextVariant);
+                System.out.println(point + " variants remove " + nextVariant);
             }
         }
     }
 
-    public void removeVariant(Grid grid, Integer value) {
+    public void removeVariant(Integer value) {
         if (variants == null) {
-            // no variants here
-            // System.out.println("null variants");
             return;
         }
 
         if (variants.remove(value)) {
-            System.out.println(new Point(row, col) + " remove variant " + value);
+            if (DEBUG_SINGLE_CANDIDATE)
+                System.out.println(point + " remove variant " + value);
             if (variants.size() == 1) {
-                setValue(variants.get(0), grid);
+                setValue(variants.get(0));
             }
         }
     }
 
-    private void computePreVariants(Grid grid) {
-        System.out.println("computePreVariants");
-        variants = Utils.createVariants();
-        grid.getPreRowVariants(row, col, variants);
-        grid.getPreColumnVariants(row, col, variants);
-        grid.getPreHouseVariants(row, col, variants);
+    private void computeVariants() {
+        variants = createVariants();
+        Grid.getInstance().filterVariantsByPrevalues(this);
 
-        System.out.print("got ");
-        for (int i = 0; i < variants.size(); i += 1)
-            System.out.print(variants.get(i) + " ");
-        System.out.println();
+        if (DEBUG_SINGLE_CANDIDATE) {
+            System.out.print("got ");
+            for (int i = 0; i < variants.size(); i += 1)
+                System.out.print(variants.get(i) + " ");
+            System.out.println();
+        }
     }
 
     public boolean hasSameVariantsAs(Square square) {
@@ -112,13 +106,10 @@ public class Square {
         return true;
     }
 
-    public String getLocationAsString() {
-        return new StringBuffer().append(row).append(':').append(col).toString();
+    private static LinkedList<Integer> createVariants() {
+        LinkedList<Integer> list = new LinkedList<Integer>();
+        list.addAll(ALL_DIGITS);
+        return list;
     }
 
-    public Point getPoint() {
-        if (point == null)
-            point = new Point(row, col);
-        return point;
-    }
 }
