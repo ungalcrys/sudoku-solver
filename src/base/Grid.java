@@ -20,7 +20,7 @@ public class Grid {
 
     /**
      * Constructor for the grid that fills the squares with given values and will also solve the
-     * single position and single candidates squares.
+     * single position (single candidates) squares.
      * 
      * @param initial
      *            matrix to be solved
@@ -46,7 +46,8 @@ public class Grid {
         return index / HOUSE_SIDE * HOUSE_SIDE;
     }
 
-    // TODO use command at cleanVariantsAround(Square) and filterByPrevalues(Square)
+    // TODO use command at cleanVariantsAround(Square) and
+    // filterByPrevalues(Square)
     public void cleanVariantsAround(Square square) {
         Integer value = square.getValue();
 
@@ -113,13 +114,13 @@ public class Grid {
         }
     }
 
-    public void cleanHouses() {
+    public void solveHiddenSingles() {
         boolean hasChanged = true;
         while (hasChanged) {
             hasChanged = false;
             for (int hr = 0; hr < HOUSE_SIDE; hr += 1) {
                 for (int hc = 0; hc < HOUSE_SIDE; hc += 1) {
-                    hasChanged = hasChanged || cleanHouse(hr, hc);
+                    hasChanged = hasChanged || solveHiddenSingle(hr, hc);
                 }
             }
         }
@@ -127,51 +128,74 @@ public class Grid {
 
     // version 1: computing unique digits from existing variants
     // TODO version 2: computing unique digits from 1 to 9, checking in variants
-    private boolean cleanHouse(int hr, int hc) {
+    private boolean solveHiddenSingle(int hr, int hc) {
         boolean isHouseChanged = false;
-        LinkedList<Square> novalSquares = new LinkedList<Square>();
+        // LinkedList<Square> unsolvedSquares = new LinkedList<Square>();
+        ArrayList<Integer> checkedVariants = new ArrayList<Integer>();
 
         int startRow = hr * HOUSE_SIDE;
-        int endRow = (hr + 1) * HOUSE_SIDE;
+        int endRow = startRow + HOUSE_SIDE;
         int startCol = hc * HOUSE_SIDE;
-        int endCol = (hc + 1) * HOUSE_SIDE;
-        for (int row = startRow; row < endRow; row += 1) {
-            for (int col = startCol; col < endCol; col += 1) {
-                LinkedList<Integer> variants = getSquare(row, col).getVariants();
+        int endCol = startCol + HOUSE_SIDE;
+        // boolean found = false;
+        for (int r = startRow; r < endRow; r += 1) {
+            for (int c = startCol; c < endCol; c += 1) {
+                LinkedList<Integer> variants = getSquare(r, c).getVariants();
                 if (variants == null)
                     continue;
-                novalSquares.add(new Square(row, col, variants));
-            }
-        }
 
-        int novalSquaresCount = novalSquares.size();
-        for (int i = 0; i < novalSquaresCount; i += 1) {
-            Iterator<Integer> iterator = novalSquares.get(i).getVariants().iterator();
-            while (iterator.hasNext()) {
-                boolean mustRemove = false;
-                Integer next = iterator.next();
-                for (int j = 0; j < novalSquaresCount; j += 1)
-                    if (i != j) {
-                        if (novalSquares.get(j).getVariants().remove(next))
-                            mustRemove = true;
-                        else {
-                            // TODO
+                for (Integer variant : variants) {
+                    if (variants.contains(variant))
+                        continue;
+
+                    // check if variant exists in next unsolved squares
+                    int c2 = 0;
+                    for (c2 = c + 1; c2 < endCol; c2 += 1) {
+                        LinkedList<Integer> variants2 = getSquare(r, c2).getVariants();
+                        if (variants2 != null && variants2.contains(variant)) {
+                            break;
                         }
                     }
-                if (mustRemove)
-                    iterator.remove();
+                    if (c2 < endCol) {
+                        // break;
+                    }
+
+                }
+                // if (variants == null)
+                // continue;
+                // unsolvedSquares.add(new Square(row, col, variants));
             }
         }
 
-        for (Square square : novalSquares) {
-            LinkedList<Integer> variants = square.getVariants();
-            if (variants.size() > 0) {
-                Integer integer = variants.get(0);
-                System.out.println();
-                getSquare(square.point.row, square.point.col).setValue(integer);
-                isHouseChanged = true;
-            }
-        }
+        // int novalSquaresCount = unsolvedSquares.size();
+        // for (int i = 0; i < novalSquaresCount; i += 1) {
+        // Iterator<Integer> iterator =
+        // unsolvedSquares.get(i).getVariants().iterator();
+        // while (iterator.hasNext()) {
+        // boolean mustRemove = false;
+        // Integer next = iterator.next();
+        // for (int j = 0; j < novalSquaresCount; j += 1)
+        // if (i != j) {
+        // if (unsolvedSquares.get(j).getVariants().remove(next))
+        // mustRemove = true;
+        // else {
+        // // TODO
+        // }
+        // }
+        // if (mustRemove)
+        // iterator.remove();
+        // }
+        // }
+        //
+        // for (Square square : unsolvedSquares) {
+        // LinkedList<Integer> variants = square.getVariants();
+        // if (variants.size() > 0) {
+        // Integer integer = variants.get(0);
+        // System.out.println();
+        // getSquare(square.point.row, square.point.col).setValue(integer);
+        // isHouseChanged = true;
+        // }
+        // }
         return isHouseChanged;
     }
 
