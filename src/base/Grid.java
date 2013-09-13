@@ -14,6 +14,8 @@ public class Grid {
     private static final int SQUARE_SIDE = 9;
     private static final int HOUSE_SIDE = 3;
 
+    public static final boolean DEBUG_HIDDEN_SINGLE = false;
+
     private static final Square[][] squares = new Square[9][9];
 
     public static Grid instance;
@@ -114,23 +116,26 @@ public class Grid {
         }
     }
 
-    public void solveHiddenSingles() {
-        boolean hasChanged = true;
-        while (hasChanged) {
-            hasChanged = false;
-            for (int hr = 0; hr < HOUSE_SIDE; hr += 1) {
-                for (int hc = 0; hc < HOUSE_SIDE; hc += 1) {
-                    hasChanged = hasChanged || solveHiddenSingle(hr, hc);
-                }
-            }
+    private boolean isVariantIn(int row, int col, Integer variant,
+            ArrayList<Integer> checkedVariants) {
+        Square square = getSquare(row, col);
+        LinkedList<Integer> variants2 = square.getVariants();
+        if (variants2 == null)
+            return false;
+
+        if (DEBUG_HIDDEN_SINGLE)
+            System.out.println("check in " + square.point + " with " + variants2);
+        if (variants2.contains(variant)) {
+            if (DEBUG_HIDDEN_SINGLE)
+                System.out.println("exists");
+            checkedVariants.add(variant);
+            return true;
         }
+        return false;
     }
 
-    // version 1: computing unique digits from existing variants
-    // TODO version 2: computing unique digits from 1 to 9, checking in variants
-    private boolean solveHiddenSingle(int hr, int hc) {
-        boolean isHouseChanged = false;
-        // LinkedList<Square> unsolvedSquares = new LinkedList<Square>();
+    // also for unit testing
+    boolean solveHiddenSingle(int hr, int hc) {
         ArrayList<Integer> checkedVariants = new ArrayList<Integer>();
 
         int startRow = hr * HOUSE_SIDE;
@@ -140,63 +145,66 @@ public class Grid {
         // boolean found = false;
         for (int r = startRow; r < endRow; r += 1) {
             for (int c = startCol; c < endCol; c += 1) {
-                LinkedList<Integer> variants = getSquare(r, c).getVariants();
+                Square square = getSquare(r, c);
+                LinkedList<Integer> variants = square.getVariants();
                 if (variants == null)
                     continue;
 
+                if (DEBUG_HIDDEN_SINGLE)
+                    System.out.println("\n=check " + square.point);
                 for (Integer variant : variants) {
-                    if (variants.contains(variant))
+                    // skip if this digit has been checked before
+                    if (checkedVariants.contains(variant))
                         continue;
 
+                    if (DEBUG_HIDDEN_SINGLE)
+                        System.out.println("variant " + variant);
                     // check if variant exists in next unsolved squares
+                    // check rest of the first line
                     int c2 = 0;
                     for (c2 = c + 1; c2 < endCol; c2 += 1) {
-                        LinkedList<Integer> variants2 = getSquare(r, c2).getVariants();
-                        if (variants2 != null && variants2.contains(variant)) {
+                        if (isVariantIn(r, c2, variant, checkedVariants))
                             break;
+                    }
+
+                    // System.out.println(">v");
+                    // variant found
+                    if (c2 < endCol)
+                        continue;
+
+                    // check the next lines
+                    outerloop: for (int r2 = r + 1; r2 < endRow; r2 += 1) {
+                        for (c2 = startCol; c2 < endCol; c2 += 1) {
+                            if (isVariantIn(r2, c2, variant, checkedVariants))
+                                break outerloop;
                         }
                     }
-                    if (c2 < endCol) {
-                        // break;
-                    }
 
+                    // System.out.println(c2 + " - " + endCol);
+                    // variant found => unique variant (hidden single) was found
+                    if (c2 >= endCol) {
+                        square.setValue(variant);
+                        return true;
+                    }
                 }
-                // if (variants == null)
-                // continue;
-                // unsolvedSquares.add(new Square(row, col, variants));
             }
         }
+        return false;
+    }
 
-        // int novalSquaresCount = unsolvedSquares.size();
-        // for (int i = 0; i < novalSquaresCount; i += 1) {
-        // Iterator<Integer> iterator =
-        // unsolvedSquares.get(i).getVariants().iterator();
-        // while (iterator.hasNext()) {
-        // boolean mustRemove = false;
-        // Integer next = iterator.next();
-        // for (int j = 0; j < novalSquaresCount; j += 1)
-        // if (i != j) {
-        // if (unsolvedSquares.get(j).getVariants().remove(next))
-        // mustRemove = true;
-        // else {
-        // // TODO
-        // }
-        // }
-        // if (mustRemove)
-        // iterator.remove();
-        // }
-        // }
-        //
-        // for (Square square : unsolvedSquares) {
-        // LinkedList<Integer> variants = square.getVariants();
-        // if (variants.size() > 0) {
-        // Integer integer = variants.get(0);
-        // System.out.println();
-        // getSquare(square.point.row, square.point.col).setValue(integer);
-        // isHouseChanged = true;
-        // }
-        // }
-        return isHouseChanged;
+    public void solveHiddenSingles() {
+        if (DEBUG_HIDDEN_SINGLE) {
+            System.out.println("\n==solveHiddenSingles");
+        }
+        boolean hasChanged = true;
+        while (hasChanged) {
+            hasChanged = false;
+            for (int hr = 0; hr < HOUSE_SIDE; hr += 1) {
+                for (int hc = 0; hc < HOUSE_SIDE; hc += 1) {
+                    hasChanged = hasChanged || solveHiddenSingle(hr, hc);
+                }
+            }
+        }
     }
 
     public void solveLockedCandidates1() {
@@ -566,5 +574,33 @@ public class Grid {
             lineBuffer.append("\n");
         }
         return lineBuffer.toString();
+    }
+
+    // only for unit testing
+    LinkedList<Integer> getVariants(int row, int col) {
+        return getSquare(row, col).getVariants();
+    }
+
+    // only for unit testing
+    int getValue(int row, int col) {
+        return getSquare(row, col).getValue();
+    }
+
+    // only for unit testing
+    boolean areEqual(int row, int col, int[] array) {
+        LinkedList<Integer> list = getSquare(row, col).getVariants();
+        if (list.size() != array.length)
+            return false;
+
+        for (int i = 0; i < array.length; i += 1)
+            if (list.get(i) != array[i])
+                return false;
+
+        return true;
+    }
+
+    // only for unit testing
+    boolean areEqual(int row, int col, int value) {
+        return getSquare(row, col).getValue() == value;
     }
 }

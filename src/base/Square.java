@@ -32,11 +32,11 @@ public class Square {
 
     }
 
-    // used by clean house
-    public Square(int row, int col, LinkedList<Integer> variants) {
-        point = new Point(row, col);
-        this.variants = (LinkedList<Integer>) variants.clone();
-    }
+    // // used by clean house
+    // public Square(int row, int col, LinkedList<Integer> variants) {
+    // point = new Point(row, col);
+    // this.variants = (LinkedList<Integer>) variants.clone();
+    // }
 
     private void setValue(Integer value, boolean isCallFromInit) {
         if (!isCallFromInit)
@@ -110,6 +110,20 @@ public class Square {
         LinkedList<Integer> list = new LinkedList<Integer>();
         list.addAll(ALL_DIGITS);
         return list;
+    }
+
+    // only for testing
+    void setOnly(int... variants) {
+        this.variants = new LinkedList<Integer>();
+        for (int variant : variants)
+            this.variants.add(variant);
+        this.value = null;
+    }
+
+    // only for testing
+    void setOnly(int value) {
+        this.value = value;
+        this.variants = null;
     }
 
 }
