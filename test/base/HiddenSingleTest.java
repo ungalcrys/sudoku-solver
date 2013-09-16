@@ -9,17 +9,17 @@ public class HiddenSingleTest extends TestCase {
     // @formatter:off
     private int[][] createEmptyGrid() {
         int[][] emptyGrid = new int[][] { 
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 },
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 }, 
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 },
-            
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 }, 
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 },
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 },
-            
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 }, 
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 },
-            { 0, 0, 0,  0, 0, 0,  0, 0, 0 } };
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
         return emptyGrid;
     }
     // @formatter:on
@@ -43,7 +43,7 @@ public class HiddenSingleTest extends TestCase {
         grid.getSquare(2, 0).setOnly(1, 5, 8);
         grid.getSquare(2, 1).setOnly(6);
         grid.getSquare(2, 2).setOnly(1, 4, 5, 8);
-        grid.solveHiddenSingle(0, 0);
+        grid.solveHiddenSingles();
 
         assertTrue(grid.areEqual(0, 0, variants00));
         assertTrue(grid.areEqual(0, 1, 3));
@@ -75,7 +75,7 @@ public class HiddenSingleTest extends TestCase {
         grid.getSquare(2, 3).setOnly(variants23);
         grid.getSquare(2, 4).setOnly(variants24);
         grid.getSquare(2, 5).setOnly(2);
-        grid.solveHiddenSingle(0, 1);
+        grid.solveHiddenSingles();
 
         assertTrue(grid.areEqual(0, 3, 5));
         assertTrue(grid.areEqual(0, 4, variants04));
@@ -107,7 +107,7 @@ public class HiddenSingleTest extends TestCase {
         grid.getSquare(2, 6).setOnly(7);
         grid.getSquare(2, 7).setOnly(variants27);
         grid.getSquare(2, 8).setOnly(9);
-        grid.solveHiddenSingle(0, 2);
+        grid.solveHiddenSingles();
 
         assertTrue(grid.areEqual(0, 6, 1));
         assertTrue(grid.areEqual(0, 7, 4));
@@ -138,19 +138,19 @@ public class HiddenSingleTest extends TestCase {
         grid.getSquare(5, 0).setOnly(6);
         grid.getSquare(5, 1).setOnly(variants51);
         grid.getSquare(5, 2).setOnly(2);
-        System.out.println(grid.getVariants(3, 2));
-        grid.solveHiddenSingle(1, 0);
+        grid.solveHiddenSingles();
 
         assertTrue(grid.areEqual(3, 0, 3));
         assertTrue(grid.areEqual(3, 1, 5));
-        assertTrue(grid.areEqual(3, 2, variants32));
+        // here lies the 2nd hidden single
+        assertTrue(grid.areEqual(3, 2, 8));
 
         assertTrue(grid.areEqual(4, 0, variants40));
         assertTrue(grid.areEqual(4, 1, 9));
         assertTrue(grid.areEqual(4, 2, variants42));
 
         assertTrue(grid.areEqual(5, 0, 6));
-        // here lies the hidden single
+        // here lies the 1st hidden single
         assertTrue(grid.areEqual(5, 1, 4));
         assertTrue(grid.areEqual(5, 2, 2));
     }
@@ -174,7 +174,7 @@ public class HiddenSingleTest extends TestCase {
         grid.getSquare(5, 3).setOnly(variants53);
         grid.getSquare(5, 4).setOnly(variants54);
         grid.getSquare(5, 5).setOnly(variants55);
-        grid.solveHiddenSingle(1, 1);
+        grid.solveHiddenSingles();
 
         assertTrue(grid.areEqual(3, 3, variants33));
         assertTrue(grid.areEqual(3, 4, variants34));
@@ -209,7 +209,7 @@ public class HiddenSingleTest extends TestCase {
         grid.getSquare(5, 6).setOnly(5);
         grid.getSquare(5, 7).setOnly(variants57);
         grid.getSquare(5, 8).setOnly(variants58);
-        grid.solveHiddenSingle(1, 2);
+        grid.solveHiddenSingles();
 
         assertTrue(grid.areEqual(3, 6, 4));
         assertTrue(grid.areEqual(3, 7, variants37));
